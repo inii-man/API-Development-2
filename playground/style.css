@@ -347,9 +347,16 @@ body {
 /* ==============================================================================
    TAB PANELS & CARDS
    ============================================================================== */
+.tab-content-area {
+  width: 100%;
+  min-width: 0;
+}
+
 .tab-panel {
   display: none;
   animation: fadeIn 0.3s ease;
+  width: 100%;
+  min-width: 0;
 }
 
 .tab-panel.active {
@@ -395,13 +402,16 @@ body {
 
 .grid-2col {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 24px;
+  align-items: start;
+  width: 100%;
+  min-width: 0;
 }
 
 @media (max-width: 960px) {
   .grid-2col {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -413,6 +423,12 @@ body {
   padding: 24px;
   box-shadow: var(--shadow-card);
   transition: border-color 0.25s;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  word-break: break-word;
 }
 
 .glass-card:hover {
@@ -643,6 +659,10 @@ body {
 .curl-box,
 .response-viewer {
   margin-top: 12px;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .curl-label,
@@ -663,7 +683,26 @@ pre {
   font-size: 0.78rem;
   color: #e2e8f0;
   overflow-x: auto;
-  max-height: 220px;
+  overflow-y: auto;
+  max-height: 260px;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+pre code {
+  font-family: inherit;
+  font-size: inherit;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  display: block;
+  max-width: 100%;
+  min-width: 0;
 }
 
 /* Info Box & Alerts */
@@ -675,6 +714,11 @@ pre {
   font-size: 0.82rem;
   color: #bfdbfe;
   margin-top: 14px;
+  min-width: 0;
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
 }
 
 .info-alert ul {
@@ -689,6 +733,11 @@ pre {
   border-radius: var(--radius-sm);
   background: var(--bg-secondary);
   border: 1px solid var(--card-border);
+  min-width: 0;
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
 }
 
 /* ==============================================================================
@@ -807,6 +856,7 @@ pre {
   border-collapse: collapse;
   font-size: 0.78rem;
   margin-top: 8px;
+  table-layout: fixed;
 }
 
 .simple-table th,
@@ -814,6 +864,9 @@ pre {
   padding: 8px 10px;
   border-bottom: 1px solid var(--card-border);
   text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
 }
 
 .simple-table th {
@@ -821,9 +874,21 @@ pre {
   font-weight: 600;
 }
 
+.simple-table td code {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
 .mock-records-table-wrapper {
   max-height: 200px;
+  overflow-x: auto;
   overflow-y: auto;
+  max-width: 100%;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 /* Rate Meter */
@@ -858,8 +923,14 @@ pre {
   font-family: var(--font-mono);
   font-size: 0.74rem;
   max-height: 160px;
+  overflow-x: auto;
   overflow-y: auto;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
   color: #94a3b8;
+  word-break: break-all;
+  white-space: pre-wrap;
 }
 
 /* ==============================================================================
