@@ -1,0 +1,343 @@
+openapi: 3.1.0
+info:
+  title: TaskHub API - Training Hari 2
+  version: 1.0.0
+  description: >
+    Spesifikasi resmi TaskHub API Hari 2: Keamanan Lanjutan dan Integrasi Eksternal.
+    Mencakup otorisasi level objek (BOLA/IDOR), proteksi Mass Assignment,
+    enkripsi AES-256-GCM, rate limiting, dan integrasi notifikasi dengan Idempotency & Circuit Breaker.
+servers:
+  - url: http://127.0.0.1:8000
+    description: Server TaskHub API Lokal (Port 8000)
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: Token Bearer Opaque (disimpan dalam bentuk hash SHA-256 di basis data)
+    IdempotencyKey:
+      type: apiKey
+      name: Idempotency-Key
+      in: header
+      description: Kunci unik untuk menjamin transaksi tunggal idempoten
+
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+            - request_id
+          properties:
+            code:
+              type: string
+              example: BOLA_ACCESS_DENIED
+            message:
+              type: string
+              example: Akses ditolak terhadap objek tugas ini.
+            request_id:
+              type: string
+              example: req_84f9b2d87e1a4c90
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+          example: task-alice-101
+        title:
+          type: string
+          example: Rencana Audit Keamanan
+        description:
+          type: string
+          example: Dokumentasi BOLA dan Circuit Breaker
+        status:
+          type: string
+          enum: [open, done]
+          example: open
+        version:
+          type: integer
+          example: 1
+        owner_id:
+          type: string
+          example: user-alice-001
+        team_id:
+          type: string
+          example: team-a
+        tenant_id:
+          type: string
+          example: tenant-1
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateTaskInput:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Tugas Baru
+        description:
+          type: string
+          maxLength: 500
+          example: Deskripsi tugas yang aman dari mass assignment
+      additionalProperties: false
+
+    UpdateTaskInput:
+      type: object
+      required:
+        - version
+      properties:
+        title:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        status:
+          type: string
+          enum: [open, done]
+        version:
+          type: integer
+          description: Nomor versi saat ini untuk Optimistic Locking
+          example: 1
+      additionalProperties: false
+
+paths:
+  /health:
+    get:
+      summary: Health check server
+      responses:
+        '200':
+          description: Server dalam kondisi prima
+
+  /api/v1/auth/login:
+    post:
+      summary: Masuk menggunakan username dan password (scrypt verification)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  example: alice
+                password:
+                  type: string
+                  example: Password123!
+      responses:
+        '200':
+          description: Login berhasil, mengembalikan opaque bearer token
+        '401':
+          description: Kredensial salah
+        '429':
+          description: Terlalu banyak percobaan login (Rate limited)
+
+  /api/v1/auth/me:
+    get:
+      summary: Mendapatkan profil pengguna yang sedang login
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Profil pengguna berhasil diambil
+        '401':
+          description: Belum terotentikasi
+
+  /api/v1/tasks:
+    get:
+      summary: Mengambil daftar tugas dengan filter hak akses otomatis (Slide 13)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+          description: Kata kunci pencarian judul atau deskripsi
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Daftar tugas berhasil diambil (meta.totalItems hanya menghitung data berhak)
+    post:
+      summary: Membuat tugas baru (Proteksi Mass Assignment - Slide 20 & 21)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskInput'
+      responses:
+        '201':
+          description: Tugas berhasil dibuat
+        '422':
+          description: Validasi skema gagal atau menyisipkan field internal terlarang
+
+  /api/v1/tasks/{id}:
+    get:
+      summary: Membaca detail tugas (Proteksi BOLA - Slide 12 & 14)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detail tugas
+        '403':
+          description: BOLA terdeteksi (Akses ditolak karena bukan pemilik/tim sah)
+        '404':
+          description: Tugas tidak ditemukan
+    patch:
+      summary: Memperbarui tugas dengan Optimistic Locking (Slide 14 & 21)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskInput'
+      responses:
+        '200':
+          description: Tugas berhasil diperbarui
+        '403':
+          description: Akses ditolak (BOLA)
+        '409':
+          description: Konflik konkurensi (Versi tugas telah berubah)
+    delete:
+      summary: Menghapus tugas (Slide 14)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Tugas berhasil dihapus
+        '403':
+          description: Akses ditolak (BOLA)
+
+  /api/v1/tasks/{id}/notify:
+    post:
+      summary: Mengirim notifikasi tugas melalui Adapter ke Mock Provider (Slide 50, 67)
+      security:
+        - BearerAuth: []
+        - IdempotencyKey: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: mode
+          in: query
+          schema:
+            type: string
+            enum: [ok, busy, fail, slow, bad]
+            default: ok
+          description: Mode simulasi kegagalan laboratorium (Fault Injection)
+      responses:
+        '200':
+          description: Notifikasi sukses dikirimkan ke provider eksternal
+        '400':
+          description: Header Idempotency-Key tidak disertakan
+        '403':
+          description: Akses ditolak (BOLA)
+        '409':
+          description: Konflik idempotensi (Kunci sama dengan payload berbeda)
+        '502':
+          description: Bentuk respons provider korup (Mode bad)
+        '503':
+          description: Provider gagal atau Circuit Breaker sedang OPEN
+
+  /api/v1/tasks/{id}/encrypt-secret:
+    post:
+      summary: Mengenkripsi catatan rahasia dengan AES-256-GCM & mengikat AAD (Slide 38-41)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - secretText
+              properties:
+                secretText:
+                  type: string
+                  example: Data rahasia kartu kredit
+      responses:
+        '201':
+          description: Data berhasil dienkripsi dan metadata tersimpan
+
+  /api/v1/tasks/{id}/decrypt-secret:
+    get:
+      summary: Mendekripsi rahasia dan memverifikasi integritas tag GMAC (Slide 39 & 40)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: tamper
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: Set true untuk mensimulasikan manipulasi bit (tampering)
+      responses:
+        '200':
+          description: Dekripsi sukses
+        '400':
+          description: Verifikasi integritas gagal (Tamper terdeteksi)

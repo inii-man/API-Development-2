@@ -1,0 +1,37 @@
+{
+  "name": "api-development-2",
+  "version": "1.0.0",
+  "description": "Training Hari 2: Keamanan Lanjutan dan Integrasi Eksternal (TaskHub & Provider Mock)",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "mock": "node provider-mock/index.js",
+    "seed": "node scripts/seed.js",
+    "crypto-demo": "node scripts/aes_gcm_demo.js",
+    "test:fault": "node scripts/test_fault_injection.js"
+  },
+  "keywords": [
+    "express",
+    "api-security",
+    "bola",
+    "idor",
+    "circuit-breaker",
+    "idempotency",
+    "aes-256-gcm",
+    "rate-limit",
+    "fault-injection"
+  ],
+  "author": "Training Team",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "pino": "^9.6.0",
+    "pino-pretty": "^13.0.0",
+    "zod": "^3.24.2"
+  }
+}

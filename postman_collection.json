@@ -1,0 +1,138 @@
+{
+  "info": {
+    "name": "TaskHub API - Training Hari 2 (Security & Reliability)",
+    "_postman_id": "c021d8d0-taskhub-hari2-lab",
+    "description": "Koleksi Postman resmi untuk API Development Training Hari 2. Mencakup pengujian BOLA, Mass Assignment, Rate Limiting, Kriptografi AES-GCM, dan Fault Injection Provider Mock.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Autentikasi",
+      "item": [
+        {
+          "name": "Login Alice (Member Tim A)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"alice\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": { "raw": "http://127.0.0.1:8000/api/v1/auth/login", "protocol": "http", "host": ["127", "0", "0", "1"], "port": "8000", "path": ["api", "v1", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Login Bob (Member Tim B)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"bob\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": { "raw": "http://127.0.0.1:8000/api/v1/auth/login", "protocol": "http", "host": ["127", "0", "0", "1"], "port": "8000", "path": ["api", "v1", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Login Charlie (Manager Tim A)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"charlie\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": { "raw": "http://127.0.0.1:8000/api/v1/auth/login", "protocol": "http", "host": ["127", "0", "0", "1"], "port": "8000", "path": ["api", "v1", "auth", "login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Proteksi BOLA & OLA (Slide 12)",
+      "item": [
+        {
+          "name": "Bob Akses Detail Task Alice (Harus 403)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_bob}}" }],
+            "url": { "raw": "http://127.0.0.1:8000/api/v1/tasks/task-alice-101", "protocol": "http", "host": ["127", "0", "0", "1"], "port": "8000", "path": ["api", "v1", "tasks", "task-alice-101"] }
+          }
+        },
+        {
+          "name": "Manager Tim A Akses Task Tim B (Harus 403)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_charlie}}" }],
+            "url": { "raw": "http://127.0.0.1:8000/api/v1/tasks/task-bob-201", "protocol": "http", "host": ["127", "0", "0", "1"], "port": "8000", "path": ["api", "v1", "tasks", "task-bob-201"] }
+          }
+        },
+        {
+          "name": "Collection Filter Izin (Slide 13)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_alice}}" }],
+            "url": { "raw": "http://127.0.0.1:8000/api/v1/tasks", "protocol": "http", "host": ["127", "0", "0", "1"], "port": "8000", "path": ["api", "v1", "tasks"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Mass Assignment Test (Slide 20-21)",
+      "item": [
+        {
+          "name": "Uji Suntik is_admin & role (Harus 422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_alice}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Tugas Uji Coba\",\n  \"role\": \"admin\",\n  \"is_admin\": true\n}"
+            },
+            "url": { "raw": "http://127.0.0.1:8000/api/v1/tasks", "protocol": "http", "host": ["127", "0", "0", "1"], "port": "8000", "path": ["api", "v1", "tasks"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Integrasi Eksternal & Idempotency",
+      "item": [
+        {
+          "name": "Kirim Notifikasi Sukses (Mode OK)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_alice}}" },
+              { "key": "Idempotency-Key", "value": "idem-key-lab-001" }
+            ],
+            "url": { "raw": "http://127.0.0.1:8000/api/v1/tasks/task-alice-101/notify?mode=ok", "protocol": "http", "host": ["127", "0", "0", "1"], "port": "8000", "path": ["api", "v1", "tasks", "task-alice-101", "notify"], "query": [{ "key": "mode", "value": "ok" }] }
+          }
+        },
+        {
+          "name": "Fault Injection: Mode Bad (Harus 502)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_alice}}" },
+              { "key": "Idempotency-Key", "value": "bad-key-001" }
+            ],
+            "url": { "raw": "http://127.0.0.1:8000/api/v1/tasks/task-alice-101/notify?mode=bad", "protocol": "http", "host": ["127", "0", "0", "1"], "port": "8000", "path": ["api", "v1", "tasks", "task-alice-101", "notify"], "query": [{ "key": "mode", "value": "bad" }] }
+          }
+        },
+        {
+          "name": "Fault Injection: Mode Fail (3x Fail Buka Circuit)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_alice}}" },
+              { "key": "Idempotency-Key", "value": "fail-key-test" }
+            ],
+            "url": { "raw": "http://127.0.0.1:8000/api/v1/tasks/task-alice-101/notify?mode=fail", "protocol": "http", "host": ["127", "0", "0", "1"], "port": "8000", "path": ["api", "v1", "tasks", "task-alice-101", "notify"], "query": [{ "key": "mode", "value": "fail" }] }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+# ==============================================================================
+# BERKAS: .gitignore
+# TUJUAN: Memberitahu Git berkas & folder mana saja yang TIDAK BOLEH di-upload ke GitHub/Git.
+# TARGET AUDIENS: Developer Pemula hingga Menengah.
+# RUJUKAN SLIDE 44: "Jangan commit .env, key, token, database lab, atau output login."
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. DEPENDENSI & MODUL EKSTERNAL (Folder Berat)
+# Mengapa diabaikan? Folder node_modules berisi ribuan file pustaka yang sangat besar.
+# Orang lain cukup menjalankan `npm install` untuk mengunduhnya secara otomatis dari package.json.
+# ------------------------------------------------------------------------------
+node_modules/
+jspm_packages/
+.pnp
+.pnp.js
+
+# ------------------------------------------------------------------------------
+# 2. FILE RAHASIA & ENVIRONMENT VARIABLES (Slide 44 & 45)
+# Mengapa diabaikan? File .env berisi kunci rahasia (secret key, token, password).
+# Jika ter-upload ke Git/GitHub publik, sistem Anda dapat diretas oleh bot otomatis!
+# Selalu bagikan `.env.example` (template kosong), BUKAN `.env` asli.
+# ------------------------------------------------------------------------------
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+*.cert
+*.crt
+
+# ------------------------------------------------------------------------------
+# 3. BASIS DATA LOKAL & JURNAL (Slide 44: "Jangan commit database lab")
+# Mengapa diabaikan? File .db bersifat dinamis, berisi data lokal Anda, dan ukurannya biner.
+# Database diinisialisasi ulang oleh developer lain menggunakan perintah `npm run seed`.
+# ------------------------------------------------------------------------------
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# ------------------------------------------------------------------------------
+# 4. LOGS & CATATAN DEBUG SERVER
+# Mengapa diabaikan? File log bertambah terus seiring waktu dan berpotensi memuat
+# IP atau histori request lokal yang tidak perlu masuk ke riwayat commit Git.
+# ------------------------------------------------------------------------------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ------------------------------------------------------------------------------
+# 5. BERKAS SAMPAH SISTEM OPERASI (OS Junk Files)
+# Mengapa diabaikan? Dibuat otomatis oleh Windows/macOS/Linux dan tidak ada hubungannya
+# dengan kode proyek Anda.
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ------------------------------------------------------------------------------
+# 6. PENGATURAN EDITOR / IDE LOKAL
+# Mengapa diabaikan? Pengaturan editor tiap developer berbeda-beda (VSCode, WebStorm).
+# ------------------------------------------------------------------------------
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.sublime-workspace
+*.sublime-project
+
+# ------------------------------------------------------------------------------
+# 7. CACHE & ARTEFAK BUILD / COVERAGE
+# ------------------------------------------------------------------------------
+.npm
+.eslintcache
+coverage/
+.nyc_output/
+dist/
+build/
+scratch/
